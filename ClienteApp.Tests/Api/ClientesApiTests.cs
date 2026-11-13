@@ -1,5 +1,4 @@
-﻿
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -61,6 +60,80 @@ public class ClientesApiTests
         // Assert
         Assert.Equal(
             HttpStatusCode.BadRequest,
+            response.StatusCode);
+    }
+
+    // PRUEBA 3 - EXAMEN FINAL
+    // Consultar un cliente existente y comprobar 200 OK.
+    [Fact]
+    public async Task ObtenerPorId_ClienteExistente_DebeRetornar200()
+    {
+        // Arrange
+        using var factory = new ClienteApiFactory();
+        using var client = factory.CreateClient();
+
+        var solicitud = new
+        {
+            Nombre = "Carlos Pérez",
+            Correo = $"carlos_{Guid.NewGuid():N}@example.com"
+        };
+
+        // Registrar un cliente para obtener su ID.
+        var registro = await client.PostAsJsonAsync(
+            "/api/Clientes",
+            solicitud);
+
+        Assert.Equal(
+            HttpStatusCode.Created,
+            registro.StatusCode);
+
+        var clienteRegistrado = await registro.Content
+            .ReadFromJsonAsync<ClienteRespuesta>();
+
+        Assert.NotNull(clienteRegistrado);
+
+        // Act: consultar el cliente existente.
+        var response = await client.GetAsync(
+            $"/api/Clientes/{clienteRegistrado.Id}");
+
+        // Assert: comprobar 200 OK.
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var clienteObtenido = await response.Content
+            .ReadFromJsonAsync<ClienteRespuesta>();
+
+        Assert.NotNull(clienteObtenido);
+        Assert.Equal(
+            clienteRegistrado.Id,
+            clienteObtenido.Id);
+        Assert.Equal(
+            solicitud.Nombre,
+            clienteObtenido.Nombre);
+        Assert.Equal(
+            solicitud.Correo,
+            clienteObtenido.Correo);
+    }
+
+    // PRUEBA 4 - EXAMEN FINAL
+    // Consultar un cliente inexistente y comprobar 404.
+    [Fact]
+    public async Task ObtenerPorId_ClienteInexistente_DebeRetornar404()
+    {
+        // Arrange
+        using var factory = new ClienteApiFactory();
+        using var client = factory.CreateClient();
+
+        int idInexistente = 99999;
+
+        // Act: consultar un cliente que no existe.
+        var response = await client.GetAsync(
+            $"/api/Clientes/{idInexistente}");
+
+        // Assert: comprobar 404 Not Found.
+        Assert.Equal(
+            HttpStatusCode.NotFound,
             response.StatusCode);
     }
 

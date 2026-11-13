@@ -131,4 +131,37 @@ public class ClienteServiceTests
     }
 
 
+    [Fact]
+    public void ObtenerPorId_ClienteExistente_DebeRetornarClienteEsperado()
+    {
+        // Arrange: preparar los datos de prueba
+        int id = 1;
+
+        var clienteEsperado = new Cliente
+        {
+            Id = id,
+            Nombre = "Ana López",
+            Correo = "ana@example.com"
+        };
+
+        // Configurar el repositorio simulado con Moq
+        _repositoryMock
+            .Setup(r => r.ObtenerPorId(id))
+            .Returns(clienteEsperado);
+
+        // Act: ejecutar el método
+        var resultado = _service.ObtenerPorId(id);
+
+        // Assert: comprobar el cliente obtenido
+        Assert.NotNull(resultado);
+        Assert.Equal(clienteEsperado.Id, resultado.Id);
+        Assert.Equal(clienteEsperado.Nombre, resultado.Nombre);
+        Assert.Equal(clienteEsperado.Correo, resultado.Correo);
+
+        // Verificar que se consultó el repositorio una sola vez
+        _repositoryMock.Verify(
+            r => r.ObtenerPorId(id),
+            Times.Once);
+    }
+
 }
